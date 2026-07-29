@@ -1,0 +1,357 @@
+# Backend Development Notes
+
+## Project Overview
+
+This document records the backend setup, architectural decisions, and technical challenges encountered while developing the Sports Management System.
+
+The goal was not only to build functionality, but to understand the underlying systems involved:
+
+* Python application structure
+* Database connectivity
+* ORM design
+* Container networking
+* Database migrations
+* Backend debugging workflows
+
+---
+
+# Development Environment Setup
+
+## Challenge
+
+Set up an isolated development environment with reproducible dependencies.
+
+## Solution
+
+Created a Python virtual environment:
+
+```bash
+python3 -m venv .venv
+```
+
+Activated it:
+
+```bash
+source .venv/bin/activate
+```
+
+Verified that Python and pip pointed to the virtual environment:
+
+```bash
+which python
+which pip
+```
+
+Installed dependencies:
+
+```bash
+pip install -r requirements.txt
+setup.sh 
+```
+
+## Key Learning
+
+Virtual environments isolate project dependencies and prevent conflicts with globally installed packages.
+
+---
+
+# Database Architecture
+
+The application uses:
+
+* PostgreSQL as the database
+* SQLAlchemy as the ORM
+* Alembic for migrations
+* psycopg2 as the PostgreSQL driver
+
+The connection flow:
+
+```
+FastAPI
+    |
+SQLAlchemy ORM
+    |
+psycopg2 driver
+    |
+PostgreSQL
+```
+
+SQLAlchemy provides the Python interface, while psycopg2 handles communication with PostgreSQL.
+
+---
+
+# Docker Database Setup
+
+## Challenge
+
+Understand Docker port mapping and container communication.
+
+Docker Compose:
+
+```yaml
+ports:
+  - "5432:5432" Already had a port on 5432 - changed to 5433
+```
+
+represents:
+
+```
+HOST MACHINE : CONTAINER
+     5432    :    5432
+```
+
+The host port allows local tools and developers to access the service.
+
+The container port is where PostgreSQL listens internally.
+
+Within Docker:
+
+```
+FastAPI Container
+        |
+        |
+postgres:5432
+        |
+PostgreSQL Container
+```
+
+Containers communicate using internal networking.
+
+---
+
+# Direct Database Debugging
+
+## Challenge
+
+Verify database state without relying on the application.
+
+## Solution
+
+Connected directly using PostgreSQL CLI:
+
+```bash
+docker exec -it sports-management-app-db-1 psql -U sportsops -d sportsops
+directcondb.sh 
+```
+
+Useful commands:
+
+```sql
+\dt
+
+SELECT * FROM users;
+
+\d users
+```
+
+## Key Learning
+
+Direct database access is useful for:
+
+* verifying migrations
+* inspecting stored data
+* debugging application issues
+* checking constraints and relationships
+
+The ORM is used by the application, while direct SQL provides visibility into the actual database state.
+
+---
+
+# SQLAlchemy Models and Metadata
+
+## Challenge
+
+Alembic generated empty migrations even though models existed.
+
+Generated migration:
+
+```python
+def upgrade():
+    pass
+```
+
+## Investigation
+
+Alembic compares:
+
+```
+SQLAlchemy Models
+        |
+        ↓
+Base.metadata
+        |
+        ↓
+Existing Database
+```
+
+If SQLAlchemy metadata is empty, Alembic has nothing to generate.
+
+Checked:
+
+```python
+print(Base.metadata.tables.keys())
+```
+
+Result:
+
+```
+dict_keys([])
+```
+
+This showed that models were not registered.
+
+---
+
+# Debugging Python Package Imports
+
+## Challenge
+
+Models existed but were not being loaded.
+
+Project structure:
+
+```
+sports-management-app/
+
+├── database.py
+
+├── models/
+│   ├── __init__.py
+│   └── user_roles.py
+
+└── alembic/
+    └── env.py
+```
+
+The intended import flow:
+
+```
+alembic/env.py
+
+        ↓
+
+import models
+
+        ↓
+
+models/__init__.py
+
+        ↓
+
+user_roles.py
+
+        ↓
+
+SQLAlchemy registers tables
+```
+
+---
+
+# Issue Found
+
+The package initializer was incorrectly named:
+
+Incorrect:
+
+```
+_init_.py
+```
+
+Correct:
+
+```
+__init__.py
+```
+
+Python only recognises `__init__.py` as a package initializer.
+
+After fixing:
+
+```python
+# models/__init__.py
+
+from .user_roles import UserRole, User
+```
+
+SQLAlchemy metadata correctly contained:
+
+```
+users
+user_roles
+```
+
+---
+
+# Alembic Migration Workflow
+
+The final workflow:
+
+## 1. Create/update models
+
+```python
+class User(Base):
+    __tablename__ = "users"
+```
+
+## 2. Generate migration
+
+```bash
+alembic revision --autogenerate -m "create users"
+```
+
+## 3. Review migration
+
+Example:
+
+```python
+op.create_table(
+    "users",
+    ...
+)
+```
+
+## 4. Apply migration
+
+```bash
+alembic upgrade head
+```
+
+The database schema now matches the application models.
+
+---
+
+# Debugging Approach Learned
+
+When something fails, trace the system layer by layer:
+
+```
+Database running?
+        ↓
+Connection works?
+        ↓
+Correct credentials?
+        ↓
+SQLAlchemy Base correct?
+        ↓
+Models imported?
+        ↓
+Metadata populated?
+        ↓
+Alembic detects changes?
+```
+
+Instead of adding random fixes, isolate each layer and verify assumptions.
+
+---
+
+# Key Backend Concepts Practiced
+
+* Environment isolation
+* Docker networking
+* PostgreSQL administration
+* ORM/database separation
+* Database migrations
+* Python package structure
+* Debugging through system layers
+
+---

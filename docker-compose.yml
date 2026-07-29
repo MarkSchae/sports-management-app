@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: sportsops
+      POSTGRES_PASSWORD: mark777
+      POSTGRES_DB: sportsops
+    ports:
+      - "5433:5432" # Left port is for local dev pc to access db/etc directly. 
+      # Right port is internal connections inside the docker container.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

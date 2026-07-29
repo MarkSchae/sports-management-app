@@ -1,98 +1,30 @@
-# Project FastAPI Template
+# Sports Operations Platform — Phase 0: Foundation
 
-### A FastAPI starter template with:
+**Status:** skeleton only. No real features yet — this phase exists purely to get auth, the database, and deployment working before any actual feature gets built on top of it.
 
-- FastAPI
+## What's implemented
+- FastAPI project skeleton (`app/main.py`, `models/`, `schemas/`, `routers/`, `database.py`)
+- PostgreSQL running via Docker, Alembic migrations initialized
+- JWT-based auth: register, login
+- Role system: `coordinator`, `coach`, `parent` — a single `User` table with a `role` field, plus a reusable dependency for role-protected routes
+- Empty skeleton models for `Department`, `Team`, `Coach`, `Player`, `Venue`, `Fixture` (structure only, no business logic yet)
+- Deployed to Render, connected to a Render-hosted Postgres instance
 
-- SQLAlchemy
+## Setup
+```bash
+docker compose up -d          # starts local Postgres
+alembic upgrade head          # runs migrations
+uvicorn app.main:app --reload # starts the API locally
+```
+Copy `.env.example` to `.env` and fill in real values before running. Never commit `.env`.
 
-- Alembic migrations
+## Roles (so far, auth only — no feature access differences yet)
+- **Coordinator** — will eventually see everything across all teams
+- **Coach** — will eventually own their own team's roster and reports
+- **Parent** — will eventually be read-only
 
-- Environment configuration
+## What's NOT built yet
+Everything feature-related. This phase is deliberately just the plumbing: auth works, the database is reachable, the app deploys. Phase 1 starts on real functionality (team/roster entry).
 
-- Project structure for scalable APIs
-
-- Setup script for fast bootstrapping
-
-This repository is intended to be used as a base template for new FastAPI projects.
-
-### Features
-
-- Structured app/ layout
-
-- Database models with SQLAlchemy
-
-- Alembic migrations pre-configured
-
-- requirements.txt dependency management
-
-- Setup script for quick environment initialization
-
-### Installation
-#### Option 1 — Using Setup Script (Recommended)
-chmod +x setup.sh
-./setup.sh
-
-##### This will:
-
-- Create virtual environment
-
-- Install dependencies from requirements.txt
-
-- Run database migrations
-
-#### Option 2 — Manual Setup
-
-- python -m venv .venv
-- source .venv/bin/activate  Linux/Mac
-- .venv\Scripts\activate   Windows
-- pip install -r requirements.txt
-alembic upgrade head
-
-### Running the Server
-uvicorn app.main:app --reload
-
-
-App will be available at:
-
-http://127.0.0.1:8000
-
-
-Swagger docs:
-
-http://127.0.0.1:8000/docs
-
-### Running Migrations
-
-Create a migration:
-
-alembic revision --autogenerate -m "your message"
-
-
-Apply migrations:
-
-alembic upgrade head
-
-### Project Structure
-app/
-  main.py
-  models.py
-  schemas.py
-  routes/
-
-alembic/
-alembic.ini
-requirements.txt
-setup.sh
-
-### Intended Use
-
-This repository serves as a clean starting point for:
-
-REST APIs
-
-Real-time systems (to be extended)
-
-Production-ready FastAPI backends
-
-Backend services integrated with other systems (e.g., Rust microservices)
+## Why this phase exists on its own
+Getting deploy + auth + migrations solid *before* any real feature means every later phase ships against a foundation that's already known to work, instead of debugging infrastructure and business logic at the same time.
