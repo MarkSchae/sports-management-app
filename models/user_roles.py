@@ -2,6 +2,8 @@ import enum
 from sqlalchemy import Column, Integer, String, Enum
 from database import Base
 
+# Defining the models/tables for the orm/db
+
 class UserRole(str, enum.Enum):
     coordinator = "coordinator"
     coach = "coach"
@@ -11,5 +13,6 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     email = Column(String, unique=True, nullable=False)
+    username = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    role = Column(Enum(UserRole), nullable=False)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.parent)

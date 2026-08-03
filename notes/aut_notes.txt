@@ -1,0 +1,126 @@
+Authentication System
+Implemented Foundation
+
+Created:
+
+auth/
+└── security.py
+
+Containing:
+
+password hashing
+password verification
+JWT creation
+Testing
+
+Used pytest to verify:
+
+passwords are hashed
+passwords can be verified
+JWT tokens are generated
+
+Authentication Debugging
+
+Issue:
+bcrypt compatibility problem.
+
+Cause:
+Passlib
++
+bcrypt 5.x
+
+were incompatible.
+
+Solution:
+Pinned bcrypt:
+
+bcrypt==4.0.1
+Issue
+
+JWT generation failed.
+
+Cause:
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+returned:
+
+None
+
+Solution:
+
+Configured environment loading and .env usage.
+
+Testing with Pytest
+
+Pytest:
+
+discovers test files automatically
+runs functions beginning with test_
+uses assertions to verify behaviour
+
+Example:
+
+assert result == expected
+
+Testing workflow:
+
+Write code
+    ↓
+Write test
+    ↓
+Run pytest
+    ↓
+Investigate failures
+    ↓
+Improve implementation
+Git Workflow
+Learned
+
+Useful commands:
+
+Check changes:
+
+git status
+
+Review staged changes:
+
+git diff --staged
+
+Check ignored files:
+
+git status --ignored
+
+Check why a file is ignored:
+
+git check-ignore -v filename
+
+
+
+AI-Assisted Development Approach
+
+AI was used as a development assistant for:
+
+understanding unfamiliar technologies
+debugging errors
+exploring architecture decisions
+improving documentation
+
+The workflow remained:
+
+Encounter problem
+        |
+        ↓
+Research possible causes
+        |
+        ↓
+Understand solution
+        |
+        ↓
+Implement
+        |
+        ↓
+Test
+        |
+        ↓
+Document Process
